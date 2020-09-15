@@ -8,14 +8,18 @@ import java.util.List;
 
 @RestController
 public class RsController {
-  private List<RsEvent> rsList = initRsEventList();
+  private static List<RsEvent> rsList;
 
-  private List<RsEvent> initRsEventList() {
+  private static List<RsEvent> initRsEventList() {
     List<RsEvent> rsEventList = new ArrayList<>();
     rsEventList.add(new RsEvent("第一条事件","无标签"));
     rsEventList.add(new RsEvent("第二条事件","无标签"));
     rsEventList.add(new RsEvent("第三条事件","无标签"));
     return rsEventList;
+  }
+
+  public static void reset(){
+    rsList = initRsEventList();
   }
 
   @GetMapping("rs/{index}")
@@ -49,5 +53,10 @@ public class RsController {
       modifiedEvent = new RsEvent(eventName, keyWord);
     }
     rsList.set(index-1,modifiedEvent);
+  }
+
+  @DeleteMapping("rs/{index}")
+  public RsEvent deleteRsEvent(@PathVariable int index){
+    return rsList.remove(index-1);
   }
 }

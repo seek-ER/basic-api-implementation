@@ -3,6 +3,7 @@ package com.thoughtworks.rslist.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -28,6 +29,7 @@ class RsControllerTest {
     @BeforeEach
     public void setUp(){
         rsList = new ArrayList<>();
+        RsController.reset();
     }
 
     @Autowired
@@ -92,6 +94,24 @@ class RsControllerTest {
         mockMvc.perform(get("/rs/1"))
                 .andExpect(jsonPath("$.eventName",is("猪肉涨价了")))
                 .andExpect(jsonPath("$.keyWord",is("经济")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void should_delete_rs_event() throws Exception{
+        rsList.add(new RsEvent("第二条事件", "无标签"));
+        rsList.add(new RsEvent("第三条事件", "无标签"));
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsList);
+
+        mockMvc.perform(delete("/rs/1"))
+                .andExpect(jsonPath("$.eventName",is("第一条事件")))
+                .andExpect(jsonPath("$.keyWord",is("无标签")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/rs/list"))
+                .andExpect(jsonPath("$",hasSize(2)))
+                .andExpect(content().json(jsonString))
                 .andExpect(status().isOk());
     }
 }
