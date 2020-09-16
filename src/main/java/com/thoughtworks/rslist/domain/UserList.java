@@ -10,7 +10,7 @@ public class UserList {
         return userList;
     }
 
-    public void setUserList(List<User> userList) {
-        this.userList = userList;
+    public static void reSetUserList() {
+        userList.clear();
     }
 }

@@ -2,6 +2,7 @@ package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
+import com.thoughtworks.rslist.domain.RsEventList;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.service.RsDataHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +30,7 @@ class RsControllerTest {
     @BeforeEach
     public void setUp(){
         rsList = new ArrayList<>();
-        new RsDataHelper().reSetRsEventList(RsController.getRsList());
+        RsEventList.reSetRsEventList();
     }
 
     @Autowired
@@ -80,7 +81,7 @@ class RsControllerTest {
         String jsonString = objectMapper.writeValueAsString(rsEvent);
 
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/rs/4"))
                 .andExpect(content().json(jsonString))
@@ -95,7 +96,7 @@ class RsControllerTest {
         String jsonString = objectMapper.writeValueAsString(rsEvent);
 
         mockMvc.perform(patch("/rs/1/").content(jsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/rs/1"))
                 .andExpect(jsonPath("$.eventName",is("猪肉涨价了")))
@@ -133,7 +134,7 @@ class RsControllerTest {
         userList.add(user);
 
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/rs/4"))
                 .andExpect(content().json(jsonString))
@@ -155,10 +156,10 @@ class RsControllerTest {
         userList.add(user);
 
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/rs/4"))
                 .andExpect(content().json(jsonString))
@@ -220,5 +221,23 @@ class RsControllerTest {
 
         mockMvc.perform(post("/rs/event").content(rsEventJsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void get_rsEvent_not_contain_user() throws Exception {
+        User user = new User("kong", "male", 22, "107978987@qq.com", "13576877788");
+        rsList.add(new RsEvent("第一条事件", "无标签",user));
+        rsList.add(new RsEvent("第二条事件", "无标签",user));
+        rsList.add(new RsEvent("第三条事件", "无标签",user));
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsList);
+
+        mockMvc.perform(get("/rs/list"))
+                .andExpect(jsonPath("$",hasSize(3)))
+                .andExpect(jsonPath("$[0]",not(hasKey("user"))))
+                .andExpect(jsonPath("$[1]",not(hasKey("user"))))
+                .andExpect(jsonPath("$[2]",not(hasKey("user"))))
+                .andExpect(content().json(jsonString))
+                .andExpect(status().isOk());
     }
 }

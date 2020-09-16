@@ -2,6 +2,8 @@ package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.domain.UserList;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -9,12 +11,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.ArrayList;
+
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -22,6 +26,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTest {
     @Autowired
     MockMvc mockMvc;
+    @BeforeEach
+    public void init(){
+        UserList.reSetUserList();
+    }
 
     @Test
     public void should_register_user() throws Exception {
@@ -30,7 +38,8 @@ class UserControllerTest {
         String jsonString = objectMapper.writeValueAsString(user);
 
         mockMvc.perform(post("/user").content(jsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(header().stringValues("Location","1"))
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/user"))
                 .andExpect(jsonPath("$",hasSize(1)))
@@ -108,5 +117,21 @@ class UserControllerTest {
 
         mockMvc.perform(post("/user").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void get_all_the_user() throws Exception{
+        ArrayList<User> userList = new ArrayList<>();
+        User user = new User("kong", "male", 22, "107978987@qq.com", "13576877788");
+        userList.add(user);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(userList);
+
+        mockMvc.perform(post("/user").content(objectMapper.writeValueAsString(user)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/user"))
+                .andDo(print())
+                .andExpect(content().json(jsonString));
     }
 }
