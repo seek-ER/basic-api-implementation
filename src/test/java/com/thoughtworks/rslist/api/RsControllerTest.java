@@ -18,6 +18,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -82,8 +83,7 @@ class RsControllerTest {
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/rs/4"))
-                .andExpect(jsonPath("$.eventName",is("猪肉涨价了")))
-                .andExpect(jsonPath("$.keyWord",is("经济")))
+                .andExpect(content().json(jsonString))
                 .andExpect(status().isOk());
     }
 
@@ -120,5 +120,105 @@ class RsControllerTest {
                 .andExpect(jsonPath("$",hasSize(2)))
                 .andExpect(content().json(returnJsonString))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void should_add_user_when_user_not_in_userList() throws Exception{
+        User user = new User("ling", "male", 22, "107978987@qq.com", "13576877788");
+        RsEvent rsEvent = new RsEvent("猪肉涨价了", "经济",user);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+
+        ArrayList<User> userList = new ArrayList<>();
+        userList.add(user);
+
+        mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/rs/4"))
+                .andExpect(content().json(jsonString))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/user"))
+                .andExpect(content().json(objectMapper.writeValueAsString(userList)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void should_not_add_user_when_user_in_userList() throws Exception{
+        User user = new User("ling", "male", 22, "107978987@qq.com", "13576877788");
+        RsEvent rsEvent = new RsEvent("猪肉涨价了", "经济",user);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+
+        ArrayList<User> userList = new ArrayList<>();
+        userList.add(user);
+
+        mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/rs/4"))
+                .andExpect(content().json(jsonString))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/rs/5"))
+                .andExpect(content().json(jsonString))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/user"))
+                .andExpect(jsonPath("$",hasSize(1)))
+                .andExpect(content().json(objectMapper.writeValueAsString(userList)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void eventName_should_not_be_null() throws Exception{
+        User user = new User("ling", "male", 22, "107978987@qq.com", "13576877788");
+        RsEvent rsEvent = new RsEvent();
+        rsEvent.setKeyWord("经济");
+        rsEvent.setUser(user);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String rsEventJsonString = objectMapper.writeValueAsString(rsEvent);
+
+        mockMvc.perform(post("/rs/event").content(rsEventJsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void keyWord_should_not_be_null() throws Exception{
+        User user = new User("ling", "male", 22, "107978987@qq.com", "13576877788");
+        RsEvent rsEvent = new RsEvent();
+        rsEvent.setEventName("经济");
+        rsEvent.setUser(user);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String rsEventJsonString = objectMapper.writeValueAsString(rsEvent);
+
+        mockMvc.perform(post("/rs/event").content(rsEventJsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void User_should_not_be_null() throws Exception{
+        RsEvent rsEvent = new RsEvent();
+        rsEvent.setEventName("经济大爆炸");
+        rsEvent.setKeyWord("经济");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String rsEventJsonString = objectMapper.writeValueAsString(rsEvent);
+
+        mockMvc.perform(post("/rs/event").content(rsEventJsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void email_should_be_normalized() throws Exception {
+        User user = new User("kong", "male", 20, "107978987", "13576877788");
+        RsEvent rsEvent = new RsEvent("猪肉涨价了", "经济",user);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String rsEventJsonString = objectMapper.writeValueAsString(rsEvent);
+
+        mockMvc.perform(post("/rs/event").content(rsEventJsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 }
