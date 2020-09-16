@@ -2,6 +2,7 @@ package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
+import com.thoughtworks.rslist.service.RsDataProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ class RsControllerTest {
     @BeforeEach
     public void setUp(){
         rsList = new ArrayList<>();
-        RsController.reset();
+        new RsDataProvider().reSetRsEventList(RsController.getRsList());
     }
 
     @Autowired

@@ -1,6 +1,7 @@
 package com.thoughtworks.rslist.api;
 
 import com.thoughtworks.rslist.domain.RsEvent;
+import com.thoughtworks.rslist.service.RsDataProvider;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -8,18 +9,9 @@ import java.util.List;
 
 @RestController
 public class RsController {
-  private static List<RsEvent> rsList;
-
-  private static List<RsEvent> initRsEventList() {
-    List<RsEvent> rsEventList = new ArrayList<>();
-    rsEventList.add(new RsEvent("第一条事件","无标签"));
-    rsEventList.add(new RsEvent("第二条事件","无标签"));
-    rsEventList.add(new RsEvent("第三条事件","无标签"));
-    return rsEventList;
-  }
-
-  public static void reset(){
-    rsList = initRsEventList();
+  private static List<RsEvent> rsList = new RsDataProvider().provideInitialRsEventList();
+  public static List<RsEvent> getRsList() {
+    return rsList;
   }
 
   @GetMapping("rs/{index}")
