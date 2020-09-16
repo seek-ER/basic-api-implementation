@@ -1,6 +1,7 @@
 package com.thoughtworks.rslist.domain;
 
 import javax.validation.constraints.*;
+import java.util.Objects;
 
 public class User {
     @NotBlank

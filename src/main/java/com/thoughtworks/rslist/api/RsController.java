@@ -1,25 +1,24 @@
 package com.thoughtworks.rslist.api;
 
 import com.thoughtworks.rslist.domain.RsEvent;
-import com.thoughtworks.rslist.service.RsDataProvider;
+import com.thoughtworks.rslist.service.RsDataHelper;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 public class RsController {
-  private static List<RsEvent> rsList = new RsDataProvider().provideInitialRsEventList();
+  private static List<RsEvent> rsList = new RsDataHelper().provideInitialRsEventList();
   public static List<RsEvent> getRsList() {
     return rsList;
   }
 
-  @GetMapping("rs/{index}")
+  @GetMapping("/rs/{index}")
   public RsEvent getOneRsEvent(@PathVariable int index){
     return rsList.get(index-1);
   }
 
-  @GetMapping("rs/list")
+  @GetMapping("/rs/list")
   public List<RsEvent> getRsEventBetween(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end){
     if (start == null || end == null){
       return rsList;
@@ -32,22 +31,18 @@ public class RsController {
     rsList.add(rsEvent);
   }
 
-  @PatchMapping("rs/{index}")
-  public void modifyRsEvent(@PathVariable int index, @RequestParam(required = false) String eventName, @RequestParam(required = false) String keyWord){
-    RsEvent modifiedEvent;
-    if (eventName==null||eventName.length()==0){
-      modifiedEvent = new RsEvent();
-      modifiedEvent.setKeyWord(keyWord);
-    }else if (keyWord==null||keyWord.length()==0){
-      modifiedEvent = new RsEvent();
-      modifiedEvent.setEventName(eventName);
-    }else {
-      modifiedEvent = new RsEvent(eventName, keyWord);
+  @PatchMapping("/rs/{index}")
+  public void modifyRsEvent(@RequestBody RsEvent rsEvent ,@PathVariable int index){
+    RsEvent IndexRsEvent = rsList.get(index - 1);
+    if (rsEvent.getEventName()!= null){
+      IndexRsEvent.setEventName(rsEvent.getEventName());
     }
-    rsList.set(index-1,modifiedEvent);
+    if (rsEvent.getKeyWord()!= null){
+      IndexRsEvent.setKeyWord(rsEvent.getKeyWord());
+    }
   }
 
-  @DeleteMapping("rs/{index}")
+  @DeleteMapping("/rs/{index}")
   public RsEvent deleteRsEvent(@PathVariable int index){
     return rsList.remove(index-1);
   }

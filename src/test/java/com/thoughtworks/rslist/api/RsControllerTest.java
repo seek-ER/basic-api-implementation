@@ -2,9 +2,9 @@ package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
-import com.thoughtworks.rslist.service.RsDataProvider;
+import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.service.RsDataHelper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,11 +16,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -30,7 +28,7 @@ class RsControllerTest {
     @BeforeEach
     public void setUp(){
         rsList = new ArrayList<>();
-        new RsDataProvider().reSetRsEventList(RsController.getRsList());
+        new RsDataHelper().reSetRsEventList(RsController.getRsList());
     }
 
     @Autowired
@@ -38,9 +36,10 @@ class RsControllerTest {
 
     @Test
     public void should_get_rs_event_list() throws Exception {
-        rsList.add(new RsEvent("第一条事件", "无标签"));
-        rsList.add(new RsEvent("第二条事件", "无标签"));
-        rsList.add(new RsEvent("第三条事件", "无标签"));
+        User user = new User("kong", "male", 22, "107978987@qq.com", "13576877788");
+        rsList.add(new RsEvent("第一条事件", "无标签",user));
+        rsList.add(new RsEvent("第二条事件", "无标签",user));
+        rsList.add(new RsEvent("第三条事件", "无标签",user));
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(rsList);
 
@@ -60,8 +59,9 @@ class RsControllerTest {
 
     @Test
     public void should_get_rs_event_between() throws Exception {
-        rsList.add(new RsEvent("第一条事件", "无标签"));
-        rsList.add(new RsEvent("第二条事件", "无标签"));
+        User user = new User("kong", "male", 22, "107978987@qq.com", "13576877788");
+        rsList.add(new RsEvent("第一条事件", "无标签",user));
+        rsList.add(new RsEvent("第二条事件", "无标签",user));
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(rsList);
 
@@ -73,7 +73,8 @@ class RsControllerTest {
 
     @Test
     public void should_add_rs_event() throws Exception{
-        RsEvent rsEvent = new RsEvent("猪肉涨价了", "经济");
+        User user = new User("kong", "male", 22, "107978987@qq.com", "13576877788");
+        RsEvent rsEvent = new RsEvent("猪肉涨价了", "经济",user);
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(rsEvent);
 
@@ -88,8 +89,12 @@ class RsControllerTest {
 
     @Test
     public void should_modify_rs_event() throws Exception{
+        User user = new User("kong", "male", 22, "107978987@qq.com", "13576877788");
+        RsEvent rsEvent = new RsEvent("猪肉涨价了", "经济",user);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
 
-        mockMvc.perform(patch("/rs/1?eventName=猪肉涨价了&keyWord=经济"))
+        mockMvc.perform(patch("/rs/1/").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/rs/1"))
@@ -100,10 +105,11 @@ class RsControllerTest {
 
     @Test
     public void should_delete_rs_event() throws Exception{
-        rsList.add(new RsEvent("第二条事件", "无标签"));
-        rsList.add(new RsEvent("第三条事件", "无标签"));
+        User user = new User("kong", "male", 22, "107978987@qq.com", "13576877788");
+        rsList.add(new RsEvent("第二条事件", "无标签",user));
+        rsList.add(new RsEvent("第三条事件", "无标签",user));
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(rsList);
+        String returnJsonString = objectMapper.writeValueAsString(rsList);
 
         mockMvc.perform(delete("/rs/1"))
                 .andExpect(jsonPath("$.eventName",is("第一条事件")))
@@ -112,7 +118,7 @@ class RsControllerTest {
 
         mockMvc.perform(get("/rs/list"))
                 .andExpect(jsonPath("$",hasSize(2)))
-                .andExpect(content().json(jsonString))
+                .andExpect(content().json(returnJsonString))
                 .andExpect(status().isOk());
     }
 }

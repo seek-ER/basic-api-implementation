@@ -2,9 +2,7 @@ package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.User;
-import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -65,7 +63,7 @@ class UserControllerTest {
     }
 
     @Test
-    public void email_should_be_formated() throws Exception {
+    public void email_should_be_normalized() throws Exception {
         User user = new User("kong", "male", 20, "107978987", "13576877788");
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(user);
@@ -75,7 +73,7 @@ class UserControllerTest {
     }
 
     @Test
-    public void phone_should_be_formated() throws Exception {
+    public void phone_should_be_normalized() throws Exception {
         User user = new User("kong", "male", 20, "107978987@qq.com", "3576877788");
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(user);
