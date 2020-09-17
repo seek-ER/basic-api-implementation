@@ -1,9 +1,10 @@
 package com.thoughtworks.rslist.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.domain.UserList;
+import com.thoughtworks.rslist.po.UserPO;
+import com.thoughtworks.rslist.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +14,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
+import java.util.List;
 
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -27,6 +28,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTest {
     @Autowired
     MockMvc mockMvc;
+
+    @Autowired
+    UserRepository userRepository;
+
     @BeforeEach
     public void init(){
         UserList.reSetUserList();
@@ -39,17 +44,35 @@ class UserControllerTest {
         String jsonString = objectMapper.writeValueAsString(user);
 
         mockMvc.perform(post("/user").content(jsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(header().stringValues("Location","1"))
                 .andExpect(status().isCreated());
+        List<UserPO> all = userRepository.findAll();
+        assertEquals(1,all.size());
+        assertEquals("kong",all.get(0).getUserName());
+        assertEquals("107978987@qq.com",all.get(0).getEmail());
+    }
 
-        mockMvc.perform(get("/user"))
-                .andExpect(jsonPath("$",hasSize(1)))
-                .andExpect(jsonPath("$[0].name",is("kong")))
-                .andExpect(jsonPath("$[0].gender",is("male")))
-                .andExpect(jsonPath("$[0].age",is(22)))
-                .andExpect(jsonPath("$[0].email",is("107978987@qq.com")))
-                .andExpect(jsonPath("$[0].phone",is("13576877788")))
+    @Test
+    public void should_get_user_by_id() throws Exception{
+        UserPO userPO = UserPO.builder().userName("kong").age(20).phone("12698909973")
+                .email("a@qq.com").gender("female").build();
+        userRepository.save(userPO);
+        int size = userRepository.findAll().size();
+        mockMvc.perform(get("/user/{id}",size))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userName",is("kong")))
+                .andExpect(jsonPath("$.age",is(20)))
+                .andExpect(jsonPath("$.gender",is("female")));
+    }
+
+    @Test
+    public void should_delete_user_by_id() throws Exception{
+        UserPO userPO = UserPO.builder().userName("kong").age(20).phone("12698909973")
+                .email("a@qq.com").gender("female").build();
+        userRepository.save(userPO);
+        int size = userRepository.findAll().size();
+        mockMvc.perform(delete("/user/{id}",size))
                 .andExpect(status().isOk());
+        assertEquals(userRepository.findAll().size(),size-1);
     }
 
     @Test

@@ -4,25 +4,49 @@ import com.thoughtworks.rslist.component.RsEventHandler;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.domain.UserList;
 import com.thoughtworks.rslist.exception.Error;
-import com.thoughtworks.rslist.exception.RsEventNotValidException;
+import com.thoughtworks.rslist.po.UserPO;
+import com.thoughtworks.rslist.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class UserController {
     List<User> userList = UserList.getUserList();
 
+    @Autowired
+    UserRepository userRepository;
+
     @PostMapping("/user")
-    public ResponseEntity addUser(@RequestBody @Valid User user) {
-        userList.add(user);
-        return ResponseEntity.created(URI.create(String.valueOf(userList.size()))).build();
+    public ResponseEntity<Void> addUser(@RequestBody @Valid User user) {
+        UserPO userPO = new UserPO();
+        userPO.setUserName(user.getName());
+        userPO.setGender(user.getGender());
+        userPO.setAge(user.getAge());
+        userPO.setEmail(user.getEmail());
+        userPO.setPhone(user.getPhone());
+        userPO.setVoteNumber(user.getVoteNumber());
+        userRepository.save(userPO);
+        return ResponseEntity.created(null).header("index", String.valueOf(userPO.getId())).build();
+    }
+
+    @GetMapping("/user/{index}")
+    public ResponseEntity<Optional<UserPO>> getUserById(@PathVariable int index){
+        Optional<UserPO> userPOById = userRepository.findById(index);
+        return ResponseEntity.ok(userPOById);
+    }
+
+    @DeleteMapping("/user/{index}")
+    public ResponseEntity<Void> deleteUserById(@PathVariable int index){
+        userRepository.deleteById(index);
+        return ResponseEntity.ok(null);
     }
 
     @GetMapping("/user")
