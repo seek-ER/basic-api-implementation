@@ -41,7 +41,7 @@ public class RsController {
     if (!getUserNameList().contains(eventUser.getName())){
       userList.add(eventUser);
     }
-    return ResponseEntity.created(URI.create(String.valueOf(rsList.size()))).build();
+    return ResponseEntity.created(null).header("index",String.valueOf(rsList.size())).build();
   }
 
   @PatchMapping("/rs/{index}")
@@ -53,7 +53,7 @@ public class RsController {
     if (rsEvent.getKeyWord()!= null){
       IndexRsEvent.setKeyWord(rsEvent.getKeyWord());
     }
-    return ResponseEntity.created(URI.create(String.valueOf(index))).build();
+    return ResponseEntity.created(null).header("index",String.valueOf(index)).build();
   }
 
   @DeleteMapping("/rs/{index}")
