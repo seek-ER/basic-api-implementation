@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.RsEventList;
 import com.thoughtworks.rslist.domain.User;
-import com.thoughtworks.rslist.service.RsDataHelper;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,13 +13,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -212,18 +210,7 @@ class RsControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @Test
-    public void email_should_be_normalized() throws Exception {
-        User user = new User("kong", "male", 20, "107978987", "13576877788");
-        RsEvent rsEvent = new RsEvent("猪肉涨价了", "经济",user);
-        ObjectMapper objectMapper = new ObjectMapper();
-        String rsEventJsonString = objectMapper.writeValueAsString(rsEvent);
-
-        mockMvc.perform(post("/rs/event").content(rsEventJsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
+    @Ignore
     public void get_rsEvent_not_contain_user() throws Exception {
         User user = new User("kong", "male", 22, "107978987@qq.com", "13576877788");
         rsList.add(new RsEvent("第一条事件", "无标签",user));
@@ -239,5 +226,48 @@ class RsControllerTest {
                 .andExpect(jsonPath("$[2]",not(hasKey("user"))))
                 .andExpect(content().json(jsonString))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void email_should_be_normalized() throws Exception {
+        User user = new User("kong", "male", 20, "107978987", "13576877788");
+        RsEvent rsEvent = new RsEvent("猪肉涨价了", "经济",user);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String rsEventJsonString = objectMapper.writeValueAsString(rsEvent);
+
+        mockMvc.perform(post("/rs/event").content(rsEventJsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void should_throw_rsEvent_not_valid_exception() throws Exception{
+        mockMvc.perform(get("/rs/0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error",is("invalid index")));
+    }
+
+    @Test
+    public void should_throw_method_argument_not_valid_exception() throws Exception{
+        User user = new User("kongllllll", "male", 22, "107978987@qq.com", "13576877788");
+        RsEvent rsEvent = new RsEvent("猪肉涨价了", "经济",user);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(rsEvent);
+
+        mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error",is("invalid param")));
+    }
+
+    @Test
+    public void should_throw_invalid_request_param_exception() throws Exception {
+        mockMvc.perform(get("/rs/list?start=0&end=2"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error",is("invalid request param")));
+        mockMvc.perform(get("/rs/list?start=1&end=4"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error",is("invalid request param")));
+        mockMvc.perform(get("/rs/list?start=2&end=1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error",is("invalid request param")));
     }
 }

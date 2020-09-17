@@ -1,5 +1,6 @@
 package com.thoughtworks.rslist.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.domain.UserList;
@@ -133,5 +134,16 @@ class UserControllerTest {
         mockMvc.perform(get("/user"))
                 .andDo(print())
                 .andExpect(content().json(jsonString));
+    }
+
+    @Test
+    public void should_throw_invalid_user() throws Exception {
+        User user = new User("kongsgsgfdfg", "male", 22, "107978987@qq.com", "13576877788");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(user);
+
+        mockMvc.perform(post("/user").content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error",is("invalid user")));
     }
 }
