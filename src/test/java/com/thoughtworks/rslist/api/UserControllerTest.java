@@ -1,9 +1,12 @@
 package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.domain.UserList;
+import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
+import com.thoughtworks.rslist.repository.RsEventRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +35,9 @@ class UserControllerTest {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    RsEventRepository rsEventRepository;
+
     @BeforeEach
     public void init(){
         UserList.reSetUserList();
@@ -55,6 +61,7 @@ class UserControllerTest {
     public void should_get_user_by_id() throws Exception{
         UserPO userPO = UserPO.builder().userName("kong").age(20).phone("12698909973")
                 .email("a@qq.com").gender("female").build();
+
         userRepository.save(userPO);
         int size = userRepository.findAll().size();
         mockMvc.perform(get("/user/{id}",size))
@@ -69,10 +76,15 @@ class UserControllerTest {
         UserPO userPO = UserPO.builder().userName("kong").age(20).phone("12698909973")
                 .email("a@qq.com").gender("female").build();
         userRepository.save(userPO);
-        int size = userRepository.findAll().size();
-        mockMvc.perform(delete("/user/{id}",size))
-                .andExpect(status().isOk());
-        assertEquals(userRepository.findAll().size(),size-1);
+        RsEventPO rsEventPO = RsEventPO.builder().eventName("猪肉涨价了").keyWord("经济").userPO(userPO).build();
+        rsEventRepository.save(rsEventPO);
+
+        int usersSize = userRepository.findAll().size();
+        int rsEventsSize = rsEventRepository.findAll().size();
+
+        mockMvc.perform(delete("/user/{id}",usersSize)).andExpect(status().isOk());
+        assertEquals(userRepository.findAll().size(),usersSize-1);
+        assertEquals(rsEventRepository.findAll().size(),rsEventsSize-1);
     }
 
     @Test

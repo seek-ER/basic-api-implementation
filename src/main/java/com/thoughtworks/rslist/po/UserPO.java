@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Data
@@ -26,5 +27,6 @@ public class UserPO {
     @Builder.Default
     private int voteNumber=10;
 
-
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "userPO")
+    private List<RsEventPO> rsEventPOs;
 }
