@@ -20,7 +20,8 @@ public class RsEventPO {
     private int id;
     private String eventName;
     private String keyWord;
-    private int voteNum;
+    @Builder.Default
+    private int voteNum=0;
     @ManyToOne
     private UserPO userPO;
 

@@ -13,16 +13,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Vote {
     private int userId;
+    @JsonIgnore
     private int rsEventId;
     private String time;
     private int voteNum;
-    @JsonIgnore
-    public int getRsEventId() {
-        return rsEventId;
-    }
-
-    @JsonIgnore
-    public void setRsEventId(int rsEventId) {
-        this.rsEventId = rsEventId;
-    }
 }

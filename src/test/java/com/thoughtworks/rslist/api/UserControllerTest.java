@@ -1,7 +1,6 @@
 package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.domain.UserList;
 import com.thoughtworks.rslist.po.RsEventPO;
@@ -23,7 +22,6 @@ import java.util.List;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -39,22 +37,26 @@ class UserControllerTest {
     @Autowired
     RsEventRepository rsEventRepository;
 
+    User user;
+    UserPO userPO;
+
     @BeforeEach
-    public void init(){
+    public void beforeEach(){
         UserList.reSetUserList();
         userRepository.deleteAll();
         rsEventRepository.deleteAll();
+        user = User.builder().name("kong").age(22).phone("13576877788").email("a@qq.com").gender("male").build();
+        userPO = UserPO.builder().userName("kong").age(22).phone("13576877788").email("a@qq.com").gender("male").build();
     }
 
     @AfterEach
-    public void after(){
+    public void afterEach(){
         userRepository.deleteAll();
         rsEventRepository.deleteAll();
     }
 
     @Test
     public void should_register_user() throws Exception {
-        User user = new User("kong", "male", 22, "107978987@qq.com", "13576877788");
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(user);
 
@@ -63,20 +65,29 @@ class UserControllerTest {
         List<UserPO> all = userRepository.findAll();
         assertEquals(1,all.size());
         assertEquals("kong",all.get(0).getUserName());
-        assertEquals("107978987@qq.com",all.get(0).getEmail());
+        assertEquals("a@qq.com",all.get(0).getEmail());
     }
 
     @Test
     public void should_get_user_by_id() throws Exception{
-        UserPO userPO = UserPO.builder().userName("kong").age(20).phone("12698909973")
-                .email("a@qq.com").gender("female").build();
-
         userRepository.save(userPO);
         mockMvc.perform(get("/user/{id}",userRepository.findAll().get(0).getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userName",is("kong")))
-                .andExpect(jsonPath("$.age",is(20)))
-                .andExpect(jsonPath("$.gender",is("female")));
+                .andExpect(jsonPath("$.age",is(22)))
+                .andExpect(jsonPath("$.gender",is("male")));
+    }
+
+    @Test
+    public void get_all_the_user() throws Exception{
+        UserPO userPO1 = UserPO.builder().userName("kong2").age(22).phone("13576877788").email("a@qq.com").gender("male").build();
+        userRepository.save(userPO);
+        userRepository.save(userPO1);
+        final List<UserPO> allUsers = userRepository.findAll();
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(allUsers);
+
+        mockMvc.perform(get("/user")).andExpect(content().json(jsonString));
     }
 
     @Test
@@ -161,22 +172,6 @@ class UserControllerTest {
 
         mockMvc.perform(post("/user").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    public void get_all_the_user() throws Exception{
-        ArrayList<User> userList = new ArrayList<>();
-        User user = new User("kong", "male", 22, "107978987@qq.com", "13576877788");
-        userList.add(user);
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(userList);
-
-        mockMvc.perform(post("/user").content(objectMapper.writeValueAsString(user)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(get("/user"))
-                .andDo(print())
-                .andExpect(content().json(jsonString));
     }
 
     @Test

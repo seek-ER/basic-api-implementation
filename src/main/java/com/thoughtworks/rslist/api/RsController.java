@@ -38,12 +38,12 @@ public class RsController {
   @Autowired
   UserRepository userRepository;
 
-  @GetMapping("/rs/{index}")
-  public ResponseEntity getOneRsEvent(@PathVariable int index){
-    if (index<=0 || index>rsList.size()){
-      throw new RsEventNotValidException("invalid index");
+  @GetMapping("/rs/{id}")
+  public ResponseEntity getOneRsEvent(@PathVariable int id){
+    if (id<=0 || id>rsList.size()){
+      throw new RsEventNotValidException("invalid id");
     }
-    return ResponseEntity.ok(rsList.get(index-1));
+    return ResponseEntity.ok(rsList.get(id-1));
   }
 
   @GetMapping("/rs/list")

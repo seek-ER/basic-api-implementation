@@ -2,7 +2,6 @@ package com.thoughtworks.rslist.api;
 
 import com.thoughtworks.rslist.component.RsEventHandler;
 import com.thoughtworks.rslist.domain.User;
-import com.thoughtworks.rslist.domain.UserList;
 import com.thoughtworks.rslist.exception.Error;
 import com.thoughtworks.rslist.po.UserPO;
 import com.thoughtworks.rslist.repository.UserRepository;
@@ -19,8 +18,6 @@ import java.util.Optional;
 
 @RestController
 public class UserController {
-    List<User> userList = UserList.getUserList();
-
     @Autowired
     UserRepository userRepository;
 
@@ -34,7 +31,9 @@ public class UserController {
         userPO.setPhone(user.getPhone());
         userPO.setVoteNumber(user.getVoteNumber());
         userRepository.save(userPO);
-        return ResponseEntity.created(null).header("index", String.valueOf(userPO.getId())).build();
+        final int size = userRepository.findAll().size();
+        final int addedUserId = userRepository.findAll().get(size - 1).getId();
+        return ResponseEntity.created(null).header("added_user_id", String.valueOf(addedUserId)).build();
     }
 
     @GetMapping("/user/{id}")
@@ -43,8 +42,7 @@ public class UserController {
         if (!userPO.isPresent()){
             return ResponseEntity.badRequest().build();
         }
-        Optional<UserPO> userPOById = userPO;
-        return ResponseEntity.ok(userPOById.get());
+        return ResponseEntity.ok(userPO.get());
     }
 
     @DeleteMapping("/user/{id}")
@@ -53,15 +51,16 @@ public class UserController {
             return ResponseEntity.badRequest().build();
         }
         userRepository.deleteById(id);
-        return ResponseEntity.ok(null);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/user")
     public ResponseEntity getUserList(){
-        return ResponseEntity.ok(userList);
+        final List<UserPO> allUser = userRepository.findAll();
+        return ResponseEntity.ok(allUser);
     }
 
-    private static Logger LOGGER = LoggerFactory.getLogger(RsEventHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RsEventHandler.class);
     @ExceptionHandler({MethodArgumentNotValidException.class})
     public ResponseEntity UserHandler(Exception e){
         String errorMessage;
