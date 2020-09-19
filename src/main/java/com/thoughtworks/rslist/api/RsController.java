@@ -65,13 +65,13 @@ public class RsController {
     }
     RsEventPO rsEventPO = RsEventPO.builder().keyWord(rsEvent.getKeyWord()).eventName(rsEvent.getEventName()).userPO(userPO.get()).build();
     rsEventRepository.save(rsEventPO);
-    return ResponseEntity.created(null).header("index",String.valueOf(rsEventRepository.findAll().size())).build();
+    return ResponseEntity.created(null).header("added_Id",String.valueOf(rsEventRepository.findAll().get(0).getId())).build();
   }
 
   @PatchMapping("/rs/{rsEventId}")
   public ResponseEntity modifyRsEvent(@RequestBody @Valid RsEvent rsEvent , @PathVariable int rsEventId){
-    RsEventPO rsEventPO = rsEventRepository.findById(rsEventId).get();
     int modifiedUserId = rsEvent.getUserId();
+    RsEventPO rsEventPO = rsEventRepository.findById(rsEventId).get();
     int rsEventCorrespondingId = rsEventPO.getUserPO().getId();
     if (modifiedUserId == rsEventCorrespondingId){
       if (rsEvent.getEventName()!= null){

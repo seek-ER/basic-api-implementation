@@ -8,6 +8,7 @@ import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
 import com.thoughtworks.rslist.repository.RsEventRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,14 @@ class UserControllerTest {
     @BeforeEach
     public void init(){
         UserList.reSetUserList();
+        userRepository.deleteAll();
+        rsEventRepository.deleteAll();
+    }
+
+    @AfterEach
+    public void after(){
+        userRepository.deleteAll();
+        rsEventRepository.deleteAll();
     }
 
     @Test
@@ -63,8 +72,7 @@ class UserControllerTest {
                 .email("a@qq.com").gender("female").build();
 
         userRepository.save(userPO);
-        int size = userRepository.findAll().size();
-        mockMvc.perform(get("/user/{id}",size))
+        mockMvc.perform(get("/user/{id}",userRepository.findAll().get(0).getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userName",is("kong")))
                 .andExpect(jsonPath("$.age",is(20)))

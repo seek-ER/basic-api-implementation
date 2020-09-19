@@ -37,15 +37,22 @@ public class UserController {
         return ResponseEntity.created(null).header("index", String.valueOf(userPO.getId())).build();
     }
 
-    @GetMapping("/user/{index}")
-    public ResponseEntity<Optional<UserPO>> getUserById(@PathVariable int index){
-        Optional<UserPO> userPOById = userRepository.findById(index);
-        return ResponseEntity.ok(userPOById);
+    @GetMapping("/user/{id}")
+    public ResponseEntity<UserPO> getUserById(@PathVariable int id){
+        Optional<UserPO> userPO = userRepository.findById(id);
+        if (!userPO.isPresent()){
+            return ResponseEntity.badRequest().build();
+        }
+        Optional<UserPO> userPOById = userPO;
+        return ResponseEntity.ok(userPOById.get());
     }
 
-    @DeleteMapping("/user/{index}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable int index){
-        userRepository.deleteById(index);
+    @DeleteMapping("/user/{id}")
+    public ResponseEntity<Void> deleteUserById(@PathVariable int id){
+        if (!userRepository.findById(id).isPresent()){
+            return ResponseEntity.badRequest().build();
+        }
+        userRepository.deleteById(id);
         return ResponseEntity.ok(null);
     }
 

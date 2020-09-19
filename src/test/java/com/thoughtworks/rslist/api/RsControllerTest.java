@@ -9,6 +9,7 @@ import com.thoughtworks.rslist.po.UserPO;
 import com.thoughtworks.rslist.repository.RsEventRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
 import jdk.nashorn.internal.ir.annotations.Ignore;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,13 +29,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class RsControllerTest {
+public class RsControllerTest {
     private List<RsEvent> rsList;
 
     @BeforeEach
     public void setUp(){
         rsList = new ArrayList<>();
         RsEventList.reSetRsEventList();
+        userRepository.deleteAll();
+        rsEventRepository.deleteAll();
+    }
+
+    @AfterEach
+    public void finish(){
         userRepository.deleteAll();
         rsEventRepository.deleteAll();
     }
@@ -54,8 +60,7 @@ class RsControllerTest {
         UserPO savedUserPO = UserPO.builder().userName("kong").age(20).phone("12698909973").email("a@qq.com").gender("female").build();
         userRepository.save(savedUserPO);
 
-        int size = userRepository.findAll().size();
-        int savedUserPOId = userRepository.findById(size).get().getId();
+        int savedUserPOId = userRepository.findAll().get(0).getId();
 
         RsEvent rsEvent = RsEvent.builder().eventName("猪肉涨价了").keyWord("经济").userId(savedUserPOId).build();
         ObjectMapper objectMapper = new ObjectMapper();
@@ -68,6 +73,8 @@ class RsControllerTest {
         List<RsEventPO> all = rsEventRepository.findAll();
         assertNotNull(all);
         assertEquals("猪肉涨价了",all.get(0).getEventName());
+        assertEquals("经济",all.get(0).getKeyWord());
+        assertEquals(savedUserPO,all.get(0).getUserPO());
     }
 
     @Test
@@ -161,7 +168,6 @@ class RsControllerTest {
 
     @Test
     public void should_get_rs_event_list() throws Exception {
-        User user = new User("kong", "male", 22, "107978987@qq.com", "13576877788");
         rsList.add(new RsEvent("第一条事件", "无标签",1));
         rsList.add(new RsEvent("第二条事件", "无标签",1));
         rsList.add(new RsEvent("第三条事件", "无标签",1));
