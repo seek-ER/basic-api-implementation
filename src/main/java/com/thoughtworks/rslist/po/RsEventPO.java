@@ -10,7 +10,7 @@ import java.util.Objects;
 
 @Entity
 @Data
-@Table(name = "rsEvent")
+@Table(name = "rs_event")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,6 +20,7 @@ public class RsEventPO {
     private int id;
     private String eventName;
     private String keyWord;
+    private int voteNum;
     @ManyToOne
     private UserPO userPO;
 
