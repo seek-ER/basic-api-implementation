@@ -1,9 +1,7 @@
 package com.thoughtworks.rslist.component;
 
+import com.thoughtworks.rslist.exception.*;
 import com.thoughtworks.rslist.exception.Error;
-import com.thoughtworks.rslist.exception.RsEventNotValidException;
-import com.thoughtworks.rslist.exception.UserNotValidException;
-import com.thoughtworks.rslist.exception.VoteNotValidException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +14,7 @@ import org.springframework.web.method.HandlerMethod;
 public class RsEventHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(RsEventHandler.class);
 
-    @ExceptionHandler({RsEventNotValidException.class,UserNotValidException.class, VoteNotValidException.class})
+    @ExceptionHandler({RsEventNotValidException.class,UserNotValidException.class, VoteNotValidException.class, TradeNotValidException.class})
     public ResponseEntity<Error> rsExceptionHandler(Exception e){
         String errorMessage= e.getMessage();
         LOGGER.error("=======" + e.getMessage() + "=======");
