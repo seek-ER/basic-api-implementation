@@ -22,7 +22,8 @@ public class RsEventPO {
     private String keyWord;
     @Builder.Default
     private int voteNum=0;
-    @ManyToOne
+    @ManyToOne()
+    @JoinColumn(name = "user_id")
     private UserPO userPO;
 
     @Override

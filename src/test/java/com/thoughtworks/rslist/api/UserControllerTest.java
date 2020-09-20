@@ -2,7 +2,6 @@ package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.User;
-import com.thoughtworks.rslist.domain.UserList;
 import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
 import com.thoughtworks.rslist.repository.RsEventRepository;
@@ -16,7 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
@@ -42,7 +40,6 @@ class UserControllerTest {
 
     @BeforeEach
     public void beforeEach(){
-        UserList.reSetUserList();
         userRepository.deleteAll();
         rsEventRepository.deleteAll();
         user = User.builder().name("kong").age(22).phone("13576877788").email("a@qq.com").gender("male").build();
@@ -59,7 +56,7 @@ class UserControllerTest {
     public void should_register_user() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(user);
-
+        final boolean b = userRepository.existsByUserName(user.getName());
         mockMvc.perform(post("/user").content(jsonString).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
         List<UserPO> all = userRepository.findAll();

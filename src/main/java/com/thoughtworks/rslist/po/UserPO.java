@@ -30,7 +30,7 @@ public class UserPO {
     private int voteNumber=10;
 
     @JsonIgnore
-    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "userPO",fetch = FetchType.EAGER)
+    @OneToMany(cascade = {CascadeType.REMOVE}, mappedBy = "userPO",fetch = FetchType.EAGER)
     private List<RsEventPO> rsEventPOs;
 
     @Override

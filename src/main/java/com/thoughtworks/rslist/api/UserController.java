@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 public class UserController {
@@ -23,6 +24,9 @@ public class UserController {
 
     @PostMapping("/user")
     public ResponseEntity<Void> addUser(@RequestBody @Valid User user) {
+        if (userRepository.existsByUserName(user.getName())) {
+            throw new RuntimeException("username has been used");
+        }
         UserPO userPO = new UserPO();
         userPO.setUserName(user.getName());
         userPO.setGender(user.getGender());
@@ -55,14 +59,14 @@ public class UserController {
     }
 
     @GetMapping("/user")
-    public ResponseEntity getUserList(){
+    public ResponseEntity<List<UserPO>> getUserList(){
         final List<UserPO> allUser = userRepository.findAll();
         return ResponseEntity.ok(allUser);
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RsEventHandler.class);
     @ExceptionHandler({MethodArgumentNotValidException.class})
-    public ResponseEntity UserHandler(Exception e){
+    public ResponseEntity<Error> UserHandler(Exception e){
         String errorMessage;
         if (e instanceof MethodArgumentNotValidException){
             errorMessage = "invalid user";

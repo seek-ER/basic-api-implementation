@@ -17,20 +17,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import javax.validation.groups.Default;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
 public class RsController {
-  private static List<RsEvent> rsList = RsEventList.getRsEventList();
-  List<User> userList =  UserList.getUserList();
-
-  private List<String> getUserNameList(){
-    return userList.stream().map(User::getName).collect(Collectors.toList());
-  }
 
   @Autowired
   RsEventRepository rsEventRepository;
@@ -38,42 +30,66 @@ public class RsController {
   @Autowired
   UserRepository userRepository;
 
-  @GetMapping("/rs/{id}")
-  public ResponseEntity getOneRsEvent(@PathVariable int id){
-    if (id<=0 || id>rsList.size()){
-      throw new RsEventNotValidException("invalid id");
-    }
-    return ResponseEntity.ok(rsList.get(id-1));
-  }
-
-  @GetMapping("/rs/list")
-  public ResponseEntity getRsEventBetween(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end){
-    if (start == null || end == null){
-      return ResponseEntity.ok(rsList);
-    }
-    if (start<=0 || start>rsList.size()||end<=0||end>rsList.size()||end<start){
-      throw new RsEventNotValidException("invalid request param");
-    }
-    return ResponseEntity.ok(rsList.subList(start-1,end));
-  }
-
   @PostMapping("/rs/event")
-  public ResponseEntity addRsEvent(@RequestBody @Valid RsEvent rsEvent){
+  public ResponseEntity<Void> addRsEvent(@RequestBody @Validated(CreateAction.class) RsEvent rsEvent){
     Optional<UserPO> userPO = userRepository.findById(rsEvent.getUserId());
     if (!userPO.isPresent()){
-      return ResponseEntity.badRequest().build();
+      throw new RsEventNotValidException("invalid user id");
     }
     RsEventPO rsEventPO = RsEventPO.builder().keyWord(rsEvent.getKeyWord()).eventName(rsEvent.getEventName()).userPO(userPO.get()).build();
     rsEventRepository.save(rsEventPO);
     return ResponseEntity.created(null).header("added_Id",String.valueOf(rsEventRepository.findAll().get(0).getId())).build();
   }
 
+  @DeleteMapping("/rs/{id}")
+  public ResponseEntity<Void> deleteRsEvent(@PathVariable int id){
+    if (!rsEventRepository.existsById(id)){
+      throw new RsEventNotValidException("invalid user id");
+    }
+    rsEventRepository.deleteById(id);
+    return ResponseEntity.ok().build();
+  }
+
+  @GetMapping("/rs/{id}")
+  public ResponseEntity<ReturnRsEventData> getOneRsEvent(@PathVariable int id){
+    final List<RsEventPO> allRsEventPO = rsEventRepository.findAll();
+    if (id<=0 || id>allRsEventPO.size()){
+      throw new RsEventNotValidException("invalid id");
+    }
+    final RsEventPO rsEventPO = allRsEventPO.get(id - 1);
+    ReturnRsEventData returnRsEventData = ReturnRsEventData.builder().eventName(rsEventPO.getEventName())
+            .keyWord(rsEventPO.getKeyWord())
+            .id(rsEventPO.getId())
+            .voteNum(rsEventPO.getVoteNum()).build();
+    return ResponseEntity.ok(returnRsEventData);
+  }
+
+  @GetMapping("/rs/list")
+  public ResponseEntity<List<ReturnRsEventData>> getRsEventBetween(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end){
+    final List<RsEventPO> allRsEventPO = rsEventRepository.findAll();
+    final List<ReturnRsEventData> returnRsEventData = allRsEventPO.stream().map(rsEventPO -> ReturnRsEventData.builder()
+            .eventName(rsEventPO.getEventName())
+            .keyWord(rsEventPO.getKeyWord())
+            .id(rsEventPO.getId())
+            .voteNum(rsEventPO.getVoteNum()).build()).collect(Collectors.toList());
+    if (start == null || end == null){
+      return ResponseEntity.ok(returnRsEventData);
+    }
+    if (start<=0 || start>allRsEventPO.size()||end<=0||end>allRsEventPO.size()||end<start){
+      throw new RsEventNotValidException("invalid request param");
+    }
+    return ResponseEntity.ok(returnRsEventData.subList(start-1,end));
+  }
+
   @PatchMapping("/rs/{rsEventId}")
-  public ResponseEntity modifyRsEvent(@RequestBody @Valid RsEvent rsEvent , @PathVariable int rsEventId){
+  public ResponseEntity<Void> modifyRsEvent(@RequestBody @Validated RsEvent rsEvent , @PathVariable int rsEventId){
     int modifiedUserId = rsEvent.getUserId();
+    if (!rsEventRepository.existsById(rsEventId)){
+      throw new RsEventNotValidException("rsEvent id do not exist");
+    }
     RsEventPO rsEventPO = rsEventRepository.findById(rsEventId).get();
-    int rsEventCorrespondingId = rsEventPO.getUserPO().getId();
-    if (modifiedUserId == rsEventCorrespondingId){
+    int rsEventCorrespondingUserId = rsEventPO.getUserPO().getId();
+    if (modifiedUserId == rsEventCorrespondingUserId){
       if (rsEvent.getEventName()!= null){
         rsEventPO.setEventName(rsEvent.getEventName());
       }
@@ -82,19 +98,14 @@ public class RsController {
       }
       rsEventRepository.save(rsEventPO);
     }else {
-      return ResponseEntity.badRequest().build();
+      throw new RsEventNotValidException("user id not match");
     }
-    return ResponseEntity.created(null).header("index",String.valueOf(rsEventId)).build();
-  }
-
-  @DeleteMapping("/rs/{index}")
-  public ResponseEntity deleteRsEvent(@PathVariable int index){
-    return ResponseEntity.ok(rsList.remove(index-1));
+    return ResponseEntity.ok().header("modified_rs_event_id",String.valueOf(rsEventId)).build();
   }
 
   private static Logger LOGGER = LoggerFactory.getLogger(RsEventHandler.class);
   @ExceptionHandler({RsEventNotValidException.class, MethodArgumentNotValidException.class})
-  public ResponseEntity rsExceptionHandler(Exception e){
+  public ResponseEntity<Error> rsExceptionHandler(Exception e){
     String errorMessage;
     if (e instanceof MethodArgumentNotValidException){
       errorMessage = "invalid param";
