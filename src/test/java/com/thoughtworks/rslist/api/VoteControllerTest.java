@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.Vote;
 import com.thoughtworks.rslist.po.RsEventPO;
 import com.thoughtworks.rslist.po.UserPO;
-import com.thoughtworks.rslist.po.VotePO;
 import com.thoughtworks.rslist.repository.RsEventRepository;
 import com.thoughtworks.rslist.repository.UserRepository;
 import com.thoughtworks.rslist.repository.VoteRepository;
@@ -20,8 +19,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -70,5 +71,20 @@ public class VoteControllerTest {
 
         assertEquals(beforeRsEventVoteNum+vote.getVoteNum(),rsEventRepository.findById(vote.getRsEventId()).get().getVoteNum());
         assertEquals(beforeUsrVoteNumber-vote.getVoteNum(),userRepository.findById(vote.getUserId()).get().getVoteNumber());
+    }
+
+    @Test
+    public void should_not_be_vote_if_vote_number_invalid() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        String time = now.format(formatter);
+
+        Vote vote = Vote.builder().rsEventId(1).voteNum(15).userId(1).time(time).build();
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(vote);
+
+        mockMvc.perform(patch("/rs/vote/{rsEventId}",vote.getRsEventId()).content(jsonString).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error",is("invalid voteNumber")));
     }
 }
