@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "vote")
@@ -17,8 +18,8 @@ public class VotePO {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    private int userId;
-    private int rsEventId;
-    private String time;
+    private LocalDateTime time;
     private int voteNum;
+    @ManyToOne @JoinColumn(name = "user_id") private UserPO userPO;
+    @ManyToOne @JoinColumn(name = "rs_event_id") private RsEventPO rsEventPO;
 }

@@ -7,3 +7,6 @@ spring:
     hibernate:
       database-platform: org.hibernate.dialect.MySQL5Dialect
       ddl-auto: create
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
