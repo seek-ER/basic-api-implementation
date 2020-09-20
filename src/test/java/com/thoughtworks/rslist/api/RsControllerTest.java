@@ -316,16 +316,4 @@ public class RsControllerTest {
                 .andExpect(content().json(jsonString))
                 .andExpect(status().isOk());
     }
-
-    @Ignore //这是检验user姓名的
-    public void should_throw_method_argument_not_valid_exception() throws Exception{
-        User user = new User("kongllllll", "male", 22, "107978987@qq.com", "13576877788");
-        RsEvent rsEvent = new RsEvent("猪肉涨价了", "经济",1);
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(rsEvent);
-
-        mockMvc.perform(post("/rs/event").content(jsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error",is("invalid param")));
-    }
 }

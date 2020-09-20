@@ -3,6 +3,7 @@ package com.thoughtworks.rslist.api;
 import com.thoughtworks.rslist.component.RsEventHandler;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.exception.Error;
+import com.thoughtworks.rslist.exception.UserNotValidException;
 import com.thoughtworks.rslist.po.UserPO;
 import com.thoughtworks.rslist.repository.UserRepository;
 import org.slf4j.Logger;
@@ -11,11 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.HandlerMethod;
 
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 public class UserController {
@@ -25,7 +26,7 @@ public class UserController {
     @PostMapping("/user")
     public ResponseEntity<Void> addUser(@RequestBody @Valid User user) {
         if (userRepository.existsByUserName(user.getName())) {
-            throw new RuntimeException("username has been used");
+            throw new UserNotValidException("username has been used");
         }
         UserPO userPO = new UserPO();
         userPO.setUserName(user.getName());
@@ -40,42 +41,27 @@ public class UserController {
         return ResponseEntity.created(null).header("added_user_id", String.valueOf(addedUserId)).build();
     }
 
+    @DeleteMapping("/user/{id}")
+    public ResponseEntity<Void> deleteUserById(@PathVariable int id){
+        if (!userRepository.findById(id).isPresent()){
+            throw new UserNotValidException("user id not valid");
+        }
+        userRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/user/{id}")
     public ResponseEntity<UserPO> getUserById(@PathVariable int id){
         Optional<UserPO> userPO = userRepository.findById(id);
         if (!userPO.isPresent()){
-            return ResponseEntity.badRequest().build();
+            throw new UserNotValidException("user id not valid");
         }
         return ResponseEntity.ok(userPO.get());
-    }
-
-    @DeleteMapping("/user/{id}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable int id){
-        if (!userRepository.findById(id).isPresent()){
-            return ResponseEntity.badRequest().build();
-        }
-        userRepository.deleteById(id);
-        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/user")
     public ResponseEntity<List<UserPO>> getUserList(){
         final List<UserPO> allUser = userRepository.findAll();
         return ResponseEntity.ok(allUser);
-    }
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RsEventHandler.class);
-    @ExceptionHandler({MethodArgumentNotValidException.class})
-    public ResponseEntity<Error> UserHandler(Exception e){
-        String errorMessage;
-        if (e instanceof MethodArgumentNotValidException){
-            errorMessage = "invalid user";
-        } else {
-            errorMessage = e.getMessage();
-        }
-        LOGGER.error("=======" + e.getMessage() + "=======");
-        Error error = new Error();
-        error.setError(errorMessage);
-        return ResponseEntity.badRequest().body(error);
     }
 }

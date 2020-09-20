@@ -16,7 +16,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -101,20 +100,5 @@ public class RsController {
       throw new RsEventNotValidException("user id not match");
     }
     return ResponseEntity.ok().header("modified_rs_event_id",String.valueOf(rsEventId)).build();
-  }
-
-  private static Logger LOGGER = LoggerFactory.getLogger(RsEventHandler.class);
-  @ExceptionHandler({RsEventNotValidException.class, MethodArgumentNotValidException.class})
-  public ResponseEntity<Error> rsExceptionHandler(Exception e){
-    String errorMessage;
-    if (e instanceof MethodArgumentNotValidException){
-      errorMessage = "invalid param";
-    } else {
-      errorMessage = e.getMessage();
-    }
-    LOGGER.error("=======" + e.getMessage() + "=======");
-    Error error = new Error();
-    error.setError(errorMessage);
-    return ResponseEntity.badRequest().body(error);
   }
 }
