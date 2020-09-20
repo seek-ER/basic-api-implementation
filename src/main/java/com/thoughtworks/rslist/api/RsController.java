@@ -44,4 +44,10 @@ public class RsController {
     rsService.modifyRsEvent(rsEvent,rsEventId);
     return ResponseEntity.ok().header("modified_rs_event_id",String.valueOf(rsEventId)).build();
   }
+
+  @PostMapping("/rs/buy/{id}")
+  public ResponseEntity buy(@PathVariable int id, @RequestBody Trade trade){
+    rsService.buy(trade, id);
+    return ResponseEntity.ok().build();
+  }
 }

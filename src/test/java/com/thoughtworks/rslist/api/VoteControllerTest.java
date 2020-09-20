@@ -78,30 +78,6 @@ public class VoteControllerTest {
         rsEventRepository.deleteAll();
     }
 
-    @Test
-    public void should_be_vote_successfully() throws Exception {
-        Vote vote = Vote.builder().rsEventId(rsEventPO.getId()).voteNum(5).userId(userPO.getId()).time(now).build();
-        String jsonString = objectMapper.writeValueAsString(vote);
-
-        int beforeRsEventVoteNum = rsEventRepository.findById(vote.getRsEventId()).get().getVoteNum();
-        final int beforeUsrVoteNumber = userRepository.findById(vote.getUserId()).get().getVoteNumber();
-
-        mockMvc.perform(patch("/rs/vote/{rsEventId}",vote.getRsEventId()).content(jsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        assertEquals(beforeRsEventVoteNum+vote.getVoteNum(),rsEventRepository.findById(vote.getRsEventId()).get().getVoteNum());
-        assertEquals(beforeUsrVoteNumber-vote.getVoteNum(),userRepository.findById(vote.getUserId()).get().getVoteNumber());
-    }
-
-    @Test
-    public void should_not_be_vote_if_vote_number_invalid() throws Exception {
-        Vote vote = Vote.builder().rsEventId(rsEventPO.getId()).voteNum(15).userId(userPO.getId()).time(now).build();
-        String jsonString = objectMapper.writeValueAsString(vote);
-
-        mockMvc.perform(patch("/rs/vote/{rsEventId}",vote.getRsEventId()).content(jsonString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error",is("invalid voteNumber")));
-    }
 
     @Test
     public void should_get_vote_records() throws Exception{

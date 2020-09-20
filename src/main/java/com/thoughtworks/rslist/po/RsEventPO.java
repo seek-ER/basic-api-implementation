@@ -22,6 +22,12 @@ public class RsEventPO {
     private String keyWord;
     @Builder.Default
     private int voteNum=0;
+    @Builder.Default
+    private int amount=0;
+    @Builder.Default
+    private int rank=0;
+
+
     @ManyToOne()
     @JoinColumn(name = "user_id")
     private UserPO userPO;
